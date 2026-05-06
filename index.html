@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffffff">
+<title>HRX Scanner</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: #f5f5f5;
+  color: #111;
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+}
+
+.app { max-width: 480px; margin: 0 auto; padding-bottom: 80px; }
+
+/* Header */
+.header {
+  background: #fff;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e8e8e8;
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+.header p { font-size: 12px; color: #999; margin-top: 1px; }
+.gear-btn {
+  width: 36px; height: 36px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer;
+}
+
+/* Scan zone */
+.scan-zone {
+  margin: 16px 16px 0;
+  background: #fff;
+  border: 1.5px dashed #d8d8d8;
+  border-radius: 16px;
+  padding: 36px 20px;
+  text-align: center;
+}
+.scan-zone h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.scan-zone p { font-size: 13px; color: #888; margin-bottom: 20px; }
+
+.btn-scan {
+  background: #111;
+  color: #fff;
+  border: none;
+  padding: 13px 28px;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: opacity 0.15s;
+}
+.btn-scan:active { opacity: 0.7; }
+#fileInput { display: none; }
+
+/* Preview */
+.img-preview {
+  margin: 12px 16px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e8e8e8;
+  position: relative; display: none;
+}
+.img-preview img { width: 100%; display: block; max-height: 180px; object-fit: cover; }
+.img-badge {
+  position: absolute; top: 8px; right: 8px;
+  background: #111; color: #fff;
+  font-size: 10px; font-weight: 600;
+  padding: 3px 9px; border-radius: 6px;
+  font-family: 'DM Mono', monospace; letter-spacing: 0.5px;
+}
+
+/* Analyzing */
+.analyzing {
+  margin: 12px 16px 0;
+  background: #fff; border: 1px solid #e8e8e8;
+  border-radius: 12px; padding: 18px 20px;
+  display: none; align-items: center; gap: 14px;
+}
+.analyzing.show { display: flex; }
+.spinner {
+  width: 18px; height: 18px; flex-shrink: 0;
+  border: 2px solid #e0e0e0; border-top-color: #111;
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.analyzing p { font-size: 13px; color: #333; }
+.analyzing span { font-size: 11px; color: #999; font-family: 'DM Mono', monospace; display: block; margin-top: 2px; }
+
+/* Form */
+.form-card {
+  margin: 12px 16px 0;
+  background: #fff; border-radius: 16px;
+  border: 1px solid #e8e8e8;
+  display: none;
+}
+.form-card.show { display: block; animation: up 0.3s ease; }
+@keyframes up { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+.form-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.form-header h3 { font-size: 14px; font-weight: 600; }
+.ai-badge {
+  font-size: 10px; font-weight: 500;
+  background: #f2f2f2; color: #666;
+  padding: 3px 8px; border-radius: 5px;
+  font-family: 'DM Mono', monospace;
+}
+
+.form-body { padding: 16px 18px 18px; }
+
+.field { margin-bottom: 14px; }
+.field-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.field-row .field { flex: 1; margin-bottom: 0; }
+
+label {
+  display: block; font-size: 11px; font-weight: 500;
+  color: #999; margin-bottom: 5px; letter-spacing: 0.2px;
+}
+
+input[type="text"], input[type="number"] {
+  width: 100%; background: #f8f8f8;
+  border: 1px solid #e8e8e8; border-radius: 8px;
+  padding: 11px 13px; color: #111;
+  font-family: 'DM Mono', monospace; font-size: 14px;
+  outline: none; transition: border-color 0.15s, background 0.15s;
+  -webkit-appearance: none;
+}
+input:focus { border-color: #111; background: #fff; }
+input.trusted { border-color: #34c759 !important; background: #f4fff7 !important; }
+input.untrusted { border-color: #ffb3b3 !important; background: #fff8f8 !important; }
+
+.trust-hint { font-size: 11px; margin-top: 4px; font-family: 'DM Mono', monospace; }
+.trust-hint.ok { color: #28a745; }
+.trust-hint.warn { color: #e05555; }
+
+/* Type pills */
+.type-pills { display: flex; gap: 8px; }
+.pill {
+  flex: 1; padding: 10px 8px;
+  border: 1.5px solid #e8e8e8; border-radius: 8px;
+  background: #f8f8f8; color: #888;
+  font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500;
+  cursor: pointer; text-align: center; transition: all 0.15s;
+}
+.pill.active { border-color: #111; background: #111; color: #fff; }
+
+/* Dims */
+.dims-row { display: flex; gap: 6px; align-items: center; margin-bottom: 14px; }
+.dims-row input { text-align: center; }
+.dim-x { color: #ccc; font-size: 16px; flex-shrink: 0; padding-bottom: 1px; }
+
+/* Vol bar */
+.vol-bar {
+  background: #f8f8f8; border: 1px solid #e8e8e8;
+  border-radius: 8px; padding: 9px 13px;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.vol-bar span { font-size: 12px; color: #888; }
+.vol-bar strong { font-size: 13px; font-family: 'DM Mono', monospace; color: #111; }
+
+/* Divider */
+.sep { height: 1px; background: #f0f0f0; margin: 4px 0 16px; }
+
+/* HRX check */
+.check-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid #e8e8e8; border-radius: 8px;
+  cursor: pointer; transition: border-color 0.15s;
+  margin-bottom: 18px;
+}
+.check-row.on { border-color: #111; }
+.check-box {
+  width: 20px; height: 20px;
+  border: 1.5px solid #ccc; border-radius: 5px;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; transition: all 0.15s;
+}
+.check-row.on .check-box { background: #111; border-color: #111; color: #fff; }
+.check-label strong { display: block; font-size: 14px; font-weight: 500; }
+.check-label span { font-size: 12px; color: #999; }
+
+/* Actions */
+.actions { display: flex; gap: 8px; }
+.btn-save {
+  flex: 1; background: #111; color: #fff;
+  border: none; padding: 14px; border-radius: 10px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.btn-save:active { opacity: 0.75; }
+.btn-reset {
+  background: #f5f5f5; border: 1px solid #e8e8e8;
+  color: #555; padding: 14px 18px; border-radius: 10px;
+  font-size: 16px; cursor: pointer; transition: background 0.15s;
+}
+.btn-reset:active { background: #eee; }
+
+/* Records */
+.records { margin: 16px 16px 0; }
+.records-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.records-head h3 { font-size: 13px; font-weight: 500; color: #999; }
+.rec-count { font-size: 12px; color: #bbb; font-family: 'DM Mono', monospace; }
+
+.record {
+  background: #fff; border: 1px solid #e8e8e8;
+  border-radius: 12px; padding: 13px 15px;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+  animation: up 0.25s ease;
+}
+.rec-type {
+  font-size: 10px; font-weight: 600; font-family: 'DM Mono', monospace;
+  background: #f2f2f2; color: #555;
+  padding: 3px 7px; border-radius: 5px; flex-shrink: 0;
+}
+.rec-info { flex: 1; min-width: 0; }
+.rec-track { font-size: 13px; font-weight: 500; font-family: 'DM Mono', monospace; }
+.rec-meta { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+.empty { text-align: center; padding: 28px 0; color: #ccc; font-size: 13px; }
+
+/* Settings overlay */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.25);
+  z-index: 300; display: none; align-items: flex-end;
+}
+.overlay.show { display: flex; }
+.sheet {
+  width: 100%; background: #fff;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px 44px;
+  animation: sheetUp 0.25s ease;
+}
+@keyframes sheetUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.sheet-handle {
+  width: 36px; height: 4px; background: #e0e0e0;
+  border-radius: 2px; margin: 0 auto 20px;
+}
+.sheet h3 { font-size: 16px; font-weight: 600; margin-bottom: 18px; }
+.cfg-field { margin-bottom: 14px; }
+.cfg-field label { font-size: 11px; color: #999; margin-bottom: 5px; display: block; }
+.cfg-field input {
+  width: 100%; background: #f8f8f8;
+  border: 1px solid #e8e8e8; border-radius: 8px;
+  padding: 11px 13px; color: #111;
+  font-family: 'DM Mono', monospace; font-size: 12px; outline: none;
+}
+.cfg-field input:focus { border-color: #111; background: #fff; }
+.btn-cfg-save {
+  width: 100%; background: #111; color: #fff;
+  border: none; padding: 14px; border-radius: 10px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; margin-top: 4px;
+}
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 20px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #111; color: #fff;
+  border-radius: 24px; padding: 11px 20px;
+  font-size: 13px; font-weight: 500;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  z-index: 999; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div>
+      <h1>HRX Scanner</h1>
+      <p>Cargo label processing</p>
+    </div>
+    <div class="gear-btn" onclick="openSettings()">⚙️</div>
+  </div>
+
+  <div class="scan-zone">
+    <h2>📷 Scan label</h2>
+    <p>Take a photo to extract cargo data automatically</p>
+    <button class="btn-scan" onclick="document.getElementById('fileInput').click()">
+      Capture Label
+    </button>
+    <input type="file" id="fileInput" accept="image/*" capture="environment" onchange="handleImage(event)">
+  </div>
+
+  <div class="img-preview" id="imgPreview">
+    <img id="previewImg" src="" alt="">
+    <div class="img-badge">CAPTURED</div>
+  </div>
+
+  <div class="analyzing" id="analyzingDiv">
+    <div class="spinner"></div>
+    <div>
+      <p>Analyzing label...</p>
+      <span id="analyzingStatus">Reading cargo data</span>
+    </div>
+  </div>
+
+  <div class="form-card" id="formCard">
+    <div class="form-header">
+      <h3>Cargo details</h3>
+      <div class="ai-badge">AI PARSED</div>
+    </div>
+    <div class="form-body">
+
+      <div class="field">
+        <label>TRACKING NUMBER</label>
+        <input type="text" id="f_tracking" placeholder="SE00330525" onclick="clearOnClick(this)">
+      </div>
+
+      <div class="field">
+        <label>CONSIGNOR — SENDER</label>
+        <input type="text" id="f_consignor" placeholder="SMC Automation SIA"
+          onclick="clearOnClick(this)"
+          oninput="checkTrust(this,'ch-consignor')"
+          onblur="checkTrust(this,'ch-consignor')">
+        <div id="ch-consignor" class="trust-hint"></div>
+      </div>
+
+      <div class="field">
+        <label>CONSIGNEE — RECEIVER</label>
+        <input type="text" id="f_consignee" placeholder="BALTFLEX AS"
+          onclick="clearOnClick(this)"
+          oninput="checkTrust(this,'ch-consignee')"
+          onblur="checkTrust(this,'ch-consignee')">
+        <div id="ch-consignee" class="trust-hint"></div>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="field">
+        <label>PACKAGE TYPE</label>
+        <div class="type-pills">
+          <div class="pill active" id="pill-cll" onclick="selectType('CLL')">📦 CLL — Parcel</div>
+          <div class="pill" id="pill-pll" onclick="selectType('PLL')">🪵 PLL — Pallet</div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>QTY (PCS)</label>
+          <input type="number" id="f_qty" placeholder="1" min="1" onclick="clearOnClick(this)">
+        </div>
+        <div class="field">
+          <label>WEIGHT (KG)</label>
+          <input type="number" id="f_weight" placeholder="3.0" step="0.1" onclick="clearOnClick(this)" oninput="calcVol()">
+        </div>
+      </div>
+
+      <label>DIMENSIONS (CM) &nbsp;L × W × H</label>
+      <div class="dims-row">
+        <input type="number" id="f_length" placeholder="L" onclick="clearOnClick(this)" oninput="calcVol()">
+        <div class="dim-x">×</div>
+        <input type="number" id="f_width" placeholder="W" onclick="clearOnClick(this)" oninput="calcVol()">
+        <div class="dim-x">×</div>
+        <input type="number" id="f_height" placeholder="H" onclick="clearOnClick(this)" oninput="calcVol()">
+      </div>
+
+      <div class="vol-bar" id="volBar" style="display:none">
+        <span>Vol. weight (L×W×H ÷ 5000)</span>
+        <strong id="volVal">—</strong>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="check-row" id="hrxRow" onclick="toggleHRX()">
+        <div class="check-box" id="hrxBox"></div>
+        <div class="check-label">
+          <strong>HRX Labeling</strong>
+          <span>Print HRX label for this shipment</span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn-save" onclick="saveRecord()">Save to Sheets</button>
+        <button class="btn-reset" onclick="resetForm()">↺</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="records">
+    <div class="records-head">
+      <h3>Session records</h3>
+      <span class="rec-count" id="recCount">0 items</span>
+    </div>
+    <div id="recList"><div class="empty">No records yet</div></div>
+  </div>
+
+</div>
+
+<div class="overlay" id="overlay" onclick="closeOverlay(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3>Settings</h3>
+    <div class="cfg-field">
+      <label>ANTHROPIC API KEY</label>
+      <input type="text" id="cfg_key" placeholder="sk-ant-...">
+    </div>
+    <div class="cfg-field">
+      <label>GOOGLE APPS SCRIPT URL</label>
+      <input type="text" id="cfg_script" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <div class="cfg-field">
+      <label>GOOGLE DRIVE FOLDER ID</label>
+      <input type="text" id="cfg_drive" placeholder="1a2b3c4d...">
+    </div>
+    <button class="btn-cfg-save" onclick="saveSettings()">Save</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toastIcon">✓</span>
+  <span id="toastMsg">Saved</span>
+</div>
+
+<script>
+const TRUSTED = [
+  'A PLUSS','AMATEKS','APE MOTORS','ARKOGINTS','AUTEX','AVERTO','AVESCO',
+  'BALTIC AGRO','BBRENTAL','BLIC','BOHNENKAMP','BOLDERAJAS SERVISS',
+  'BRENNTAG','CERTEX','CEWOOD','COLORFAB','DCL','DELAVAL','DETTAL','DLF',
+  'DRUKĀTAVA','DRUKATAVA','E-KOMERCIJA','ELAKS PLUS','ELKO GRUPA','EUROMAIL',
+  'EUROSTANDARD','GREEN PRINT','HEIDELBERG','HQ CHIPPER','IDEMIA','IMAGING PRINT',
+  'IMPAKS','INK IDEA','JELGAVAS','JMJ TIRDZN','LAT MET','LATGALES DRUKA',
+  'LIEPĀJAS PAPĪRS','LIEPAJAS PAPIRS','MIKROTĪKLS','MIKROTIKLS','NITROTEK',
+  'ORIGINAL AUTOPART','POLIPAKS','PRECO','PRINTER','PRODEX','RADEX EUROPE',
+  'RIPO FABRIKA','SATEMA BALTIC','SERVISS DOLE','SIKA BALTIC','SKAN TOOLING',
+  'SKANDI MOTORS','SMC AUTOMATION','SPECIALPLAST','STE-VIKAN','TEKNOS','TENTE',
+  'UNIPRINTA','VELOPROFS','VIA3L LATVIA','ZIEGLERA','PM-TM','SERPANTINS',
+  'CARE OF SWEDEN','BALTFLEX'
+];
+
+function isTrusted(val) {
+  if (!val || val.trim().length < 2) return null;
+  const n = val.toUpperCase();
+  return TRUSTED.some(t => n.includes(t));
+}
+
+function checkTrust(el, hintId) {
+  const hint = document.getElementById(hintId);
+  el.classList.remove('trusted','untrusted');
+  if (!el.value || el.value.trim().length < 2) { hint.textContent = ''; return; }
+  const t = isTrusted(el.value);
+  if (t) {
+    el.classList.add('trusted');
+    hint.className = 'trust-hint ok';
+    hint.textContent = '✓ Trusted — no verification needed';
+  } else {
+    el.classList.add('untrusted');
+    hint.className = 'trust-hint warn';
+    hint.textContent = '⚠ Unknown supplier — verify';
+  }
+}
+
+let currentType = 'CLL', hrxLabeling = false, records = [], currentPhotoBase64 = null;
+
+function openSettings() {
+  document.getElementById('cfg_key').value = localStorage.getItem('hrx_key') || '';
+  document.getElementById('cfg_script').value = localStorage.getItem('hrx_script') || '';
+  document.getElementById('cfg_drive').value = localStorage.getItem('hrx_drive') || '';
+  document.getElementById('overlay').classList.add('show');
+}
+function saveSettings() {
+  localStorage.setItem('hrx_key', document.getElementById('cfg_key').value.trim());
+  localStorage.setItem('hrx_script', document.getElementById('cfg_script').value.trim());
+  localStorage.setItem('hrx_drive', document.getElementById('cfg_drive').value.trim());
+  document.getElementById('overlay').classList.remove('show');
+  toast('✓', 'Settings saved');
+}
+function closeOverlay(e) {
+  if (e.target === document.getElementById('overlay'))
+    document.getElementById('overlay').classList.remove('show');
+}
+
+async function handleImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    currentPhotoBase64 = e.target.result.split(',')[1];
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('imgPreview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+  document.getElementById('formCard').classList.remove('show');
+  document.getElementById('analyzingDiv').classList.add('show');
+  const steps = ['Reading cargo data','Extracting dimensions','Parsing tracking info','Finalizing...'];
+  let i = 0;
+  const iv = setInterval(() => { if (i < steps.length) document.getElementById('analyzingStatus').textContent = steps[i++]; }, 800);
+  try {
+    const data = await callClaude(file);
+    clearInterval(iv);
+    document.getElementById('analyzingDiv').classList.remove('show');
+    fillForm(data);
+  } catch(e) {
+    clearInterval(iv);
+    document.getElementById('analyzingDiv').classList.remove('show');
+    toast('⚠', 'Manual mode — fill in manually');
+    fillForm({});
+    console.error(e);
+  }
+  event.target.value = '';
+}
+
+async function callClaude(file) {
+  const key = localStorage.getItem('hrx_key');
+  if (!key) { toast('⚙', 'Set API key in settings'); return {}; }
+  const b64 = await toB64(file);
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: file.type || 'image/jpeg', data: b64 } },
+        { type: 'text', text: `Extract shipping label data. Return ONLY valid JSON, no markdown:
+{"tracking":"","consignor":"sender company name","consignee":"receiver company name","qty":1,"weight":0.0,"length":0,"width":0,"height":0,"type":"CLL or PLL"}
+Use null for unclear fields.` }
+      ]}]
+    })
+  });
+  if (!res.ok) throw new Error(res.status);
+  const d = await res.json();
+  const txt = d.content.map(b => b.text||'').join('').replace(/```json|```/g,'').trim();
+  return JSON.parse(txt);
+}
+
+function toB64(file) {
+  return new Promise((res,rej) => {
+    const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(file);
+  });
+}
+
+function fillForm(d) {
+  document.getElementById('f_tracking').value = d.tracking || '';
+  document.getElementById('f_qty').value = d.qty || '1';
+  document.getElementById('f_weight').value = d.weight || '';
+  document.getElementById('f_length').value = d.length || '';
+  document.getElementById('f_width').value = d.width || '';
+  document.getElementById('f_height').value = d.height || '';
+  const cs = document.getElementById('f_consignor');
+  const ce = document.getElementById('f_consignee');
+  cs.value = d.consignor || '';
+  ce.value = d.consignee || '';
+  checkTrust(cs,'ch-consignor');
+  checkTrust(ce,'ch-consignee');
+  selectType(d.type === 'PLL' ? 'PLL' : 'CLL');
+  hrxLabeling = false;
+  document.getElementById('hrxRow').classList.remove('on');
+  document.getElementById('hrxBox').textContent = '';
+  calcVol();
+  document.getElementById('formCard').classList.add('show');
+  setTimeout(() => document.getElementById('formCard').scrollIntoView({ behavior:'smooth', block:'start' }), 50);
+}
+
+function clearOnClick(el) {
+  const orig = el.value; el.value = '';
+  el.addEventListener('blur', () => { if (!el.value) el.value = orig; }, { once: true });
+}
+
+function selectType(t) {
+  currentType = t;
+  document.getElementById('pill-cll').classList.toggle('active', t === 'CLL');
+  document.getElementById('pill-pll').classList.toggle('active', t === 'PLL');
+}
+
+function toggleHRX() {
+  hrxLabeling = !hrxLabeling;
+  document.getElementById('hrxRow').classList.toggle('on', hrxLabeling);
+  document.getElementById('hrxBox').textContent = hrxLabeling ? '✓' : '';
+}
+
+function calcVol() {
+  const l = parseFloat(document.getElementById('f_length').value);
+  const w = parseFloat(document.getElementById('f_width').value);
+  const h = parseFloat(document.getElementById('f_height').value);
+  const bar = document.getElementById('volBar');
+  if (l && w && h) { document.getElementById('volVal').textContent = (l*w*h/5000).toFixed(2)+' kg'; bar.style.display='flex'; }
+  else bar.style.display = 'none';
+}
+
+function resetForm() {
+  document.getElementById('formCard').classList.remove('show');
+  document.getElementById('imgPreview').style.display = 'none';
+  currentPhotoBase64 = null; hrxLabeling = false;
+}
+
+async function saveRecord() {
+  const tracking = document.getElementById('f_tracking').value.trim();
+  if (!tracking) { toast('⚠', 'Enter tracking number'); return; }
+  const now = new Date();
+  const date = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const row = {
+    date, tracking,
+    consignor: document.getElementById('f_consignor').value.trim(),
+    consignee: document.getElementById('f_consignee').value.trim(),
+    type: currentType,
+    qty: document.getElementById('f_qty').value,
+    weight: document.getElementById('f_weight').value,
+    length: document.getElementById('f_length').value,
+    width: document.getElementById('f_width').value,
+    height: document.getElementById('f_height').value,
+    hrxLabeling: hrxLabeling ? 'YES' : '',
+    photoBase64: currentPhotoBase64 || ''
+  };
+  records.unshift(row);
+  renderRecords();
+  const url = localStorage.getItem('hrx_script');
+  if (!url) { toast('✓', 'Saved locally'); return; }
+  try {
+    toast('…', 'Saving...');
+    await fetch(url, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify(row) });
+    toast('✓', 'Saved to Google Sheets');
+    resetForm();
+  } catch(e) { toast('⚠', 'Network error — saved locally'); }
+}
+
+function renderRecords() {
+  const list = document.getElementById('recList');
+  document.getElementById('recCount').textContent = records.length + ' item' + (records.length !== 1 ? 's' : '');
+  if (!records.length) { list.innerHTML = '<div class="empty">No records yet</div>'; return; }
+  list.innerHTML = records.map(r => `
+    <div class="record">
+      <div class="rec-type">${r.type}</div>
+      <div class="rec-info">
+        <div class="rec-track">${r.tracking}</div>
+        <div class="rec-meta">${r.date} · ${r.weight||'?'} kg · ${r.length||'?'}×${r.width||'?'}×${r.height||'?'} cm${r.hrxLabeling ? ' · 🏷' : ''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toast(icon, msg) {
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toastMsg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+renderRecords();
+</script>
+</body>
+</html>
