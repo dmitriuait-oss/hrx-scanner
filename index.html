@@ -4,15 +4,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HRX Scanner">
+<meta name="theme-color" content="#E31E24">
+<meta name="description" content="HRX Cargo Label Scanner">
+<link rel="manifest" href="manifest.json">
 <title>HRX Scanner</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+:root {
+  --red: #E31E24;
+  --red-dark: #C0181D;
+  --red-light: #fef2f2;
+  --black: #1A1A1A;
+  --white: #FFFFFF;
+  --gray: #f5f5f5;
+  --gray2: #f0f0f0;
+  --border: #e8e8e8;
+  --muted: #888;
+  --text: #1A1A1A;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 body {
-  background: #f5f5f5;
-  color: #111;
+  background: var(--gray);
+  color: var(--text);
   font-family: 'DM Sans', sans-serif;
   min-height: 100vh;
 }
@@ -21,37 +38,46 @@ body {
 
 /* Header */
 .header {
-  background: #fff;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e8e8e8;
+  background: var(--black);
+  padding: 14px 18px;
   position: sticky; top: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
 }
-.header h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
-.header p { font-size: 12px; color: #999; margin-top: 1px; }
+.header-left { display: flex; align-items: center; gap: 10px; }
+.hrx-logo {
+  background: var(--red);
+  color: #fff;
+  font-size: 13px; font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+.header-title { color: #fff; font-size: 15px; font-weight: 600; }
+.header-sub { color: #888; font-size: 11px; margin-top: 1px; }
 .gear-btn {
-  width: 36px; height: 36px;
-  border: 1px solid #e8e8e8;
+  width: 34px; height: 34px;
+  border: 1px solid #333;
   border-radius: 8px;
-  background: #fff;
+  background: transparent;
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px; cursor: pointer;
+  font-size: 15px; cursor: pointer;
+  color: #fff;
 }
 
 /* Scan zone */
 .scan-zone {
-  margin: 16px 16px 0;
-  background: #fff;
-  border: 1.5px dashed #d8d8d8;
-  border-radius: 16px;
-  padding: 36px 20px;
+  margin: 14px 14px 0;
+  background: var(--white);
+  border: 1.5px dashed #ddd;
+  border-radius: 14px;
+  padding: 30px 20px;
   text-align: center;
 }
-.scan-zone h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-.scan-zone p { font-size: 13px; color: #888; margin-bottom: 20px; }
+.scan-zone h2 { font-size: 15px; font-weight: 600; margin-bottom: 5px; }
+.scan-zone p { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
 
 .btn-scan {
-  background: #111;
+  background: var(--red);
   color: #fff;
   border: none;
   padding: 13px 28px;
@@ -60,89 +86,93 @@ body {
   font-size: 14px; font-weight: 600;
   cursor: pointer;
   display: inline-flex; align-items: center; gap: 8px;
-  transition: opacity 0.15s;
+  transition: background 0.15s;
 }
-.btn-scan:active { opacity: 0.7; }
+.btn-scan:active { background: var(--red-dark); }
 #fileInput { display: none; }
 
 /* Preview */
 .img-preview {
-  margin: 12px 16px 0;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #e8e8e8;
+  margin: 10px 14px 0;
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--border);
   position: relative; display: none;
 }
-.img-preview img { width: 100%; display: block; max-height: 180px; object-fit: cover; }
+.img-preview img { width: 100%; display: block; max-height: 170px; object-fit: cover; }
 .img-badge {
   position: absolute; top: 8px; right: 8px;
-  background: #111; color: #fff;
-  font-size: 10px; font-weight: 600;
-  padding: 3px 9px; border-radius: 6px;
+  background: var(--red); color: #fff;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 9px; border-radius: 5px;
   font-family: 'DM Mono', monospace; letter-spacing: 0.5px;
 }
 
 /* Analyzing */
 .analyzing {
-  margin: 12px 16px 0;
-  background: #fff; border: 1px solid #e8e8e8;
-  border-radius: 12px; padding: 18px 20px;
+  margin: 10px 14px 0;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
   display: none; align-items: center; gap: 14px;
 }
 .analyzing.show { display: flex; }
 .spinner {
   width: 18px; height: 18px; flex-shrink: 0;
-  border: 2px solid #e0e0e0; border-top-color: #111;
+  border: 2px solid #eee; border-top-color: var(--red);
   border-radius: 50%; animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-.analyzing p { font-size: 13px; color: #333; }
-.analyzing span { font-size: 11px; color: #999; font-family: 'DM Mono', monospace; display: block; margin-top: 2px; }
+.analyzing p { font-size: 13px; color: #333; font-weight: 500; }
+.analyzing span { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; display: block; margin-top: 2px; }
 
 /* Form */
 .form-card {
-  margin: 12px 16px 0;
-  background: #fff; border-radius: 16px;
-  border: 1px solid #e8e8e8;
+  margin: 10px 14px 0;
+  background: var(--white); border-radius: 14px;
+  border: 1px solid var(--border);
   display: none;
 }
 .form-card.show { display: block; animation: up 0.3s ease; }
 @keyframes up { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
 .form-header {
-  padding: 14px 18px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--gray2);
   display: flex; align-items: center; justify-content: space-between;
+  background: var(--gray);
+  border-radius: 14px 14px 0 0;
 }
 .form-header h3 { font-size: 14px; font-weight: 600; }
 .ai-badge {
-  font-size: 10px; font-weight: 500;
-  background: #f2f2f2; color: #666;
+  font-size: 10px; font-weight: 600;
+  background: var(--red); color: #fff;
   padding: 3px 8px; border-radius: 5px;
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', monospace; letter-spacing: 0.3px;
 }
 
-.form-body { padding: 16px 18px 18px; }
+.form-body { padding: 14px 16px 16px; }
 
-.field { margin-bottom: 14px; }
-.field-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.field { margin-bottom: 13px; }
+.field-row { display: flex; gap: 10px; margin-bottom: 13px; }
 .field-row .field { flex: 1; margin-bottom: 0; }
 
 label {
-  display: block; font-size: 11px; font-weight: 500;
-  color: #999; margin-bottom: 5px; letter-spacing: 0.2px;
+  display: block; font-size: 10px; font-weight: 600;
+  color: var(--muted); margin-bottom: 5px;
+  letter-spacing: 0.5px; text-transform: uppercase;
 }
 
 input[type="text"], input[type="number"] {
-  width: 100%; background: #f8f8f8;
-  border: 1px solid #e8e8e8; border-radius: 8px;
-  padding: 11px 13px; color: #111;
+  width: 100%; background: var(--gray);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 11px 13px; color: var(--text);
   font-family: 'DM Sans', sans-serif; font-size: 14px;
   outline: none; transition: border-color 0.15s, background 0.15s;
   -webkit-appearance: none;
 }
-#f_weight, #f_qty, #f_length, #f_width, #f_height { font-family: 'DM Mono', monospace; }
-input:focus { border-color: #111; background: #fff; }
+#f_weight, #f_qty, #f_length, #f_width, #f_height {
+  font-family: 'DM Mono', monospace;
+}
+input:focus { border-color: var(--red); background: var(--white); }
 input.trusted { border-color: #34c759 !important; background: #f4fff7 !important; }
 input.untrusted { border-color: #ffb3b3 !important; background: #fff8f8 !important; }
 
@@ -154,98 +184,110 @@ input.untrusted { border-color: #ffb3b3 !important; background: #fff8f8 !importa
 .type-pills { display: flex; gap: 8px; }
 .pill {
   flex: 1; padding: 10px 8px;
-  border: 1.5px solid #e8e8e8; border-radius: 8px;
-  background: #f8f8f8; color: #888;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  background: var(--gray); color: var(--muted);
   font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500;
   cursor: pointer; text-align: center; transition: all 0.15s;
 }
-.pill.active { border-color: #111; background: #111; color: #fff; }
+.pill.active { border-color: var(--red); background: var(--red); color: #fff; }
 
 /* Dims */
-.dims-row { display: flex; gap: 6px; align-items: center; margin-bottom: 14px; }
+.dims-row { display: flex; gap: 6px; align-items: center; margin-bottom: 13px; }
 .dims-row input { text-align: center; }
-.dim-x { color: #ccc; font-size: 16px; flex-shrink: 0; padding-bottom: 1px; }
+.dim-x { color: #ccc; font-size: 15px; flex-shrink: 0; }
 
 /* Vol bar */
 .vol-bar {
-  background: #f8f8f8; border: 1px solid #e8e8e8;
+  background: var(--red-light); border: 1px solid #fecaca;
   border-radius: 8px; padding: 9px 13px;
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 13px;
 }
 .vol-bar span { font-size: 12px; color: #888; }
-.vol-bar strong { font-size: 13px; font-family: 'DM Mono', monospace; color: #111; }
+.vol-bar strong { font-size: 13px; font-family: 'DM Mono', monospace; color: var(--red); }
 
 /* Divider */
-.sep { height: 1px; background: #f0f0f0; margin: 4px 0 16px; }
+.sep { height: 1px; background: var(--gray2); margin: 4px 0 14px; }
 
 /* HRX check */
 .check-row {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 14px;
-  border: 1.5px solid #e8e8e8; border-radius: 8px;
+  border: 1.5px solid var(--border); border-radius: 8px;
   cursor: pointer; transition: border-color 0.15s;
-  margin-bottom: 18px;
+  margin-bottom: 16px; background: var(--gray);
 }
-.check-row.on { border-color: #111; }
+.check-row.on { border-color: var(--red); background: var(--red-light); }
 .check-box {
   width: 20px; height: 20px;
   border: 1.5px solid #ccc; border-radius: 5px;
   flex-shrink: 0; display: flex; align-items: center; justify-content: center;
   font-size: 12px; transition: all 0.15s;
 }
-.check-row.on .check-box { background: #111; border-color: #111; color: #fff; }
+.check-row.on .check-box { background: var(--red); border-color: var(--red); color: #fff; }
 .check-label strong { display: block; font-size: 14px; font-weight: 500; }
-.check-label span { font-size: 12px; color: #999; }
+.check-label span { font-size: 12px; color: var(--muted); }
 
 /* Actions */
 .actions { display: flex; gap: 8px; }
 .btn-save {
-  flex: 1; background: #111; color: #fff;
+  flex: 1; background: var(--red); color: #fff;
   border: none; padding: 14px; border-radius: 10px;
-  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
-  cursor: pointer; transition: opacity 0.15s;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: background 0.15s;
+  letter-spacing: 0.2px;
 }
-.btn-save:active { opacity: 0.75; }
+.btn-save:active { background: var(--red-dark); }
 .btn-reset {
-  background: #f5f5f5; border: 1px solid #e8e8e8;
+  background: var(--gray); border: 1px solid var(--border);
   color: #555; padding: 14px 18px; border-radius: 10px;
   font-size: 16px; cursor: pointer; transition: background 0.15s;
 }
 .btn-reset:active { background: #eee; }
 
 /* Records */
-.records { margin: 16px 16px 0; }
+.records { margin: 14px 14px 0; }
 .records-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.records-head h3 { font-size: 13px; font-weight: 500; color: #999; }
+.records-head h3 { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
 .rec-count { font-size: 12px; color: #bbb; font-family: 'DM Mono', monospace; }
 
 .record {
-  background: #fff; border: 1px solid #e8e8e8;
-  border-radius: 12px; padding: 13px 15px;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px;
   margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
   animation: up 0.25s ease;
 }
 .rec-type {
-  font-size: 10px; font-weight: 600; font-family: 'DM Mono', monospace;
-  background: #f2f2f2; color: #555;
+  font-size: 10px; font-weight: 700; font-family: 'DM Mono', monospace;
+  background: var(--red); color: #fff;
   padding: 3px 7px; border-radius: 5px; flex-shrink: 0;
 }
 .rec-info { flex: 1; min-width: 0; }
-.rec-track { font-size: 13px; font-weight: 500; font-family: 'DM Mono', monospace; }
+.rec-track { font-size: 13px; font-weight: 600; font-family: 'DM Mono', monospace; }
 .rec-meta { font-size: 11px; color: #aaa; margin-top: 2px; }
 
 .empty { text-align: center; padding: 28px 0; color: #ccc; font-size: 13px; }
 
+.rec-status { font-size: 13px; flex-shrink: 0; }
+.retry-btn {
+  font-size: 10px; font-weight: 600;
+  background: none; border: 1px solid #ffb3b3;
+  color: #e05555; border-radius: 5px;
+  padding: 2px 7px; cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  margin-top: 4px; display: inline-block;
+}
+
+
 /* Settings overlay */
 .overlay {
   position: fixed; inset: 0;
-  background: rgba(0,0,0,0.25);
+  background: rgba(0,0,0,0.5);
   z-index: 300; display: none; align-items: flex-end;
 }
 .overlay.show { display: flex; }
 .sheet {
-  width: 100%; background: #fff;
+  width: 100%; background: var(--white);
   border-radius: 20px 20px 0 0;
   padding: 20px 20px 44px;
   animation: sheetUp 0.25s ease;
@@ -255,20 +297,20 @@ input.untrusted { border-color: #ffb3b3 !important; background: #fff8f8 !importa
   width: 36px; height: 4px; background: #e0e0e0;
   border-radius: 2px; margin: 0 auto 20px;
 }
-.sheet h3 { font-size: 16px; font-weight: 600; margin-bottom: 18px; }
+.sheet h3 { font-size: 16px; font-weight: 700; margin-bottom: 18px; }
 .cfg-field { margin-bottom: 14px; }
-.cfg-field label { font-size: 11px; color: #999; margin-bottom: 5px; display: block; }
+.cfg-field label { font-size: 11px; color: var(--muted); margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
 .cfg-field input {
-  width: 100%; background: #f8f8f8;
-  border: 1px solid #e8e8e8; border-radius: 8px;
-  padding: 11px 13px; color: #111;
+  width: 100%; background: var(--gray);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 11px 13px; color: var(--text);
   font-family: 'DM Mono', monospace; font-size: 12px; outline: none;
 }
-.cfg-field input:focus { border-color: #111; background: #fff; }
+.cfg-field input:focus { border-color: var(--red); background: var(--white); }
 .btn-cfg-save {
-  width: 100%; background: #111; color: #fff;
+  width: 100%; background: var(--red); color: #fff;
   border: none; padding: 14px; border-radius: 10px;
-  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700;
   cursor: pointer; margin-top: 4px;
 }
 
@@ -276,11 +318,11 @@ input.untrusted { border-color: #ffb3b3 !important; background: #fff8f8 !importa
 .toast {
   position: fixed; bottom: 20px; left: 50%;
   transform: translateX(-50%) translateY(80px);
-  background: #111; color: #fff;
+  background: var(--black); color: #fff;
   border-radius: 24px; padding: 11px 20px;
   font-size: 13px; font-weight: 500;
   display: flex; align-items: center; gap: 8px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
   transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
   z-index: 999; white-space: nowrap;
 }
@@ -291,15 +333,18 @@ input.untrusted { border-color: #ffb3b3 !important; background: #fff8f8 !importa
 <div class="app">
 
   <div class="header">
-    <div>
-      <h1>HRX Scanner</h1>
-      <p>Cargo label processing</p>
+    <div class="header-left">
+      <div class="hrx-logo">HRX</div>
+      <div>
+        <div class="header-title">Cargo Scanner</div>
+        <div class="header-sub">Label processing</div>
+      </div>
     </div>
     <div class="gear-btn" onclick="openSettings()">⚙️</div>
   </div>
 
   <div class="scan-zone">
-    <h2>📷 Scan label</h2>
+    <h2>📷 Scan shipping label</h2>
     <p>Take a photo to extract cargo data automatically</p>
     <button class="btn-scan" onclick="document.getElementById('fileInput').click()">
       Capture Label
@@ -328,12 +373,12 @@ input.untrusted { border-color: #ffb3b3 !important; background: #fff8f8 !importa
     <div class="form-body">
 
       <div class="field">
-        <label>TRACKING NUMBER</label>
+        <label>Tracking Number</label>
         <input type="text" id="f_tracking" placeholder="SE00330525" onclick="clearOnClick(this)">
       </div>
 
       <div class="field">
-        <label>CONSIGNOR — SENDER</label>
+        <label>Consignor — Sender</label>
         <input type="text" id="f_consignor" placeholder="SMC Automation SIA"
           onclick="clearOnClick(this)"
           oninput="checkTrust(this,'ch-consignor')"
@@ -342,7 +387,7 @@ input.untrusted { border-color: #ffb3b3 !important; background: #fff8f8 !importa
       </div>
 
       <div class="field">
-        <label>CONSIGNEE — RECEIVER</label>
+        <label>Consignee — Receiver</label>
         <input type="text" id="f_consignee" placeholder="BALTFLEX AS"
           onclick="clearOnClick(this)"
           oninput="checkTrust(this,'ch-consignee')"
@@ -353,7 +398,7 @@ input.untrusted { border-color: #ffb3b3 !important; background: #fff8f8 !importa
       <div class="sep"></div>
 
       <div class="field">
-        <label>PACKAGE TYPE</label>
+        <label>Package Type</label>
         <div class="type-pills">
           <div class="pill active" id="pill-cll" onclick="selectType('CLL')">📦 CLL — Parcel</div>
           <div class="pill" id="pill-pll" onclick="selectType('PLL')">🪵 PLL — Pallet</div>
@@ -362,16 +407,16 @@ input.untrusted { border-color: #ffb3b3 !important; background: #fff8f8 !importa
 
       <div class="field-row">
         <div class="field">
-          <label>QTY (PCS)</label>
+          <label>Qty (pcs)</label>
           <input type="number" id="f_qty" placeholder="1" min="1" onclick="clearOnClick(this)">
         </div>
         <div class="field">
-          <label>WEIGHT (KG)</label>
+          <label>Weight (kg)</label>
           <input type="number" id="f_weight" placeholder="3.0" step="0.1" onclick="clearOnClick(this)" oninput="calcVol()">
         </div>
       </div>
 
-      <label>DIMENSIONS (CM) &nbsp;L × W × H</label>
+      <label>Dimensions (cm) — L × W × H</label>
       <div class="dims-row">
         <input type="number" id="f_length" placeholder="L" onclick="clearOnClick(this)" oninput="calcVol()">
         <div class="dim-x">×</div>
@@ -416,17 +461,17 @@ input.untrusted { border-color: #ffb3b3 !important; background: #fff8f8 !importa
 <div class="overlay" id="overlay" onclick="closeOverlay(event)">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <h3>Settings</h3>
+    <h3>⚙️ Settings</h3>
     <div class="cfg-field">
-      <label>ANTHROPIC API KEY</label>
+      <label>Anthropic API Key</label>
       <input type="text" id="cfg_key" placeholder="sk-ant-...">
     </div>
     <div class="cfg-field">
-      <label>GOOGLE APPS SCRIPT URL</label>
+      <label>Google Apps Script URL</label>
       <input type="text" id="cfg_script" placeholder="https://script.google.com/macros/s/.../exec">
     </div>
     <div class="cfg-field">
-      <label>GOOGLE DRIVE FOLDER ID</label>
+      <label>Google Drive Folder ID</label>
       <input type="text" id="cfg_drive" placeholder="1a2b3c4d...">
     </div>
     <button class="btn-cfg-save" onclick="saveSettings()">Save</button>
@@ -520,7 +565,7 @@ async function handleImage(event) {
     clearInterval(iv);
     document.getElementById('analyzingDiv').classList.remove('show');
     toast('⚠', 'Manual mode — fill in manually');
-    fillForm({});
+    fillForm(null);
     console.error(e);
   }
   event.target.value = '';
@@ -528,19 +573,25 @@ async function handleImage(event) {
 
 async function callClaude(file) {
   const key = localStorage.getItem('hrx_key');
-  if (!key) { toast('⚙', 'Set API key in settings'); return {}; }
+  if (!key) { toast('⚙', 'Set API key in settings'); return null; }
   const b64 = await toB64(file);
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1000,
       messages: [{ role: 'user', content: [
         { type: 'image', source: { type: 'base64', media_type: file.type || 'image/jpeg', data: b64 } },
-        { type: 'text', text: `Extract shipping label data. Return ONLY valid JSON, no markdown:
-{"tracking":"","consignor":"sender company name","consignee":"receiver company name","qty":1,"weight":0.0,"length":0,"width":0,"height":0,"type":"CLL or PLL"}
-Use null for unclear fields.` }
+        { type: 'text', text: `Look ONLY at THIS image. Extract shipping label data from this specific photo.
+Return ONLY valid JSON, no markdown, no explanation:
+{"tracking":"shipment ID code","consignor":"sender company","consignee":"receiver company","qty":1,"weight":0.0,"length":0,"width":0,"height":0,"type":"CLL or PLL"}
+Rules: tracking=the barcode/ID number. qty=use total from X/Y format (1/3 means 3). weight=kg. dimensions in cm. type=CLL for box/parcel, PLL for pallet. Use null if not visible.` }
       ]}]
     })
   });
@@ -557,8 +608,15 @@ function toB64(file) {
 }
 
 function fillForm(d) {
+  ['f_tracking','f_qty','f_weight','f_length','f_width','f_height','f_consignor','f_consignee'].forEach(id => {
+    document.getElementById(id).value = '';
+    document.getElementById(id).classList.remove('trusted','untrusted');
+  });
+  document.getElementById('ch-consignor').textContent = '';
+  document.getElementById('ch-consignee').textContent = '';
+  if (!d) { document.getElementById('formCard').classList.add('show'); return; }
   document.getElementById('f_tracking').value = d.tracking || '';
-  document.getElementById('f_qty').value = d.qty || '1';
+  document.getElementById('f_qty').value = d.qty || '';
   document.getElementById('f_weight').value = d.weight || '';
   document.getElementById('f_length').value = d.length || '';
   document.getElementById('f_width').value = d.width || '';
@@ -626,31 +684,72 @@ async function saveRecord() {
     width: document.getElementById('f_width').value,
     height: document.getElementById('f_height').value,
     hrxLabeling: hrxLabeling ? 'YES' : '',
-    photoBase64: currentPhotoBase64 || ''
+    photoBase64: currentPhotoBase64 || '',
+    status: 'pending'
   };
   records.unshift(row);
   renderRecords();
+  resetForm();
   const url = localStorage.getItem('hrx_script');
-  if (!url) { toast('✓', 'Saved locally'); return; }
+  if (!url) {
+    row.status = 'local';
+    renderRecords();
+    toast('📱', 'Saved locally — no Script URL');
+    return;
+  }
   try {
-    toast('…', 'Saving...');
+    toast('…', 'Saving to Sheets...');
     await fetch(url, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify(row) });
-    toast('✓', 'Saved to Google Sheets');
-    resetForm();
-  } catch(e) { toast('⚠', 'Network error — saved locally'); }
+    row.status = 'saved';
+    renderRecords();
+    toast('✓', 'Saved to Google Sheets!');
+  } catch(e) {
+    row.status = 'error';
+    renderRecords();
+    toast('❌', 'Error — tap retry on record');
+  }
+}
+
+async function retryRecord(idx) {
+  const row = records[idx];
+  if (!row) return;
+  const url = localStorage.getItem('hrx_script');
+  if (!url) { toast('⚙', 'Set Script URL in settings'); return; }
+  row.status = 'pending';
+  renderRecords();
+  try {
+    toast('…', 'Retrying...');
+    await fetch(url, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify(row) });
+    row.status = 'saved';
+    renderRecords();
+    toast('✓', 'Saved to Google Sheets!');
+  } catch(e) {
+    row.status = 'error';
+    renderRecords();
+    toast('❌', 'Still failing — check connection');
+  }
+}
+
+function statusIcon(s) {
+  if (s === 'saved') return '<span class="rec-status" title="Saved to Google Sheets">✅</span>';
+  if (s === 'error') return '<span class="rec-status" title="Error">❌</span>';
+  if (s === 'local') return '<span class="rec-status" title="Saved locally">📱</span>';
+  return '<span class="rec-status" title="Saving...">⏳</span>';
 }
 
 function renderRecords() {
   const list = document.getElementById('recList');
   document.getElementById('recCount').textContent = records.length + ' item' + (records.length !== 1 ? 's' : '');
   if (!records.length) { list.innerHTML = '<div class="empty">No records yet</div>'; return; }
-  list.innerHTML = records.map(r => `
+  list.innerHTML = records.map((r, i) => `
     <div class="record">
       <div class="rec-type">${r.type}</div>
       <div class="rec-info">
         <div class="rec-track">${r.tracking}</div>
         <div class="rec-meta">${r.date} · ${r.weight||'?'} kg · ${r.length||'?'}×${r.width||'?'}×${r.height||'?'} cm${r.hrxLabeling ? ' · 🏷' : ''}</div>
+        ${r.status === 'error' ? `<button class="retry-btn" onclick="retryRecord(${i})">↺ Retry</button>` : ''}
       </div>
+      ${statusIcon(r.status)}
     </div>
   `).join('');
 }
